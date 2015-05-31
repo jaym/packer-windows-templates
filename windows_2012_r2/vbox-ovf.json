@@ -9,10 +9,10 @@
     "winrm_wait_timeout": "10m",
     "guest_additions_mode": "disable",
     "shutdown_timeout": "2h",
-    "shutdown_command": "shutdown /s /t 10 /f /d p:4:1 /c \"Packer Shutdown\"",
+    "shutdown_command": "shutdown /s /t 10 /f /d p:4:1 /c \"Packer Shutdown\" && net stop winrm",
     "vboxmanage": [
       ["modifyvm", "{{.Name}}", "--memory", "2048"],
-      ["modifyvm", "{{.Name}}", "--cpus", "1"]
+      ["modifyvm", "{{.Name}}", "--cpus", "2"]
     ]
   }],
   "provisioners": [{
@@ -23,8 +23,16 @@
     "elevated_user": "packer",		
     "elevated_password": "packer",
     "inline": [
-      "choco install -y netfx-4.5.2-devpack"
+      "choco install -y dotnet4.5",
+      "choco install -y powershell -pre"
     ]
+  }, {
+    "type": "restart-windows",
+    "restart_command": "shutdown /r /t 10 /f /d p:4:2 /c \"Packer Restart\""
+  }, {
+    "type": "windows-shell",
+    "scripts": ["scripts/compile-dotnet-assemblies.bat", "scripts/compact.bat"],
+    "pause_before": "2m"
   }],
   "post-processors": [{
     "type": "vagrant",
